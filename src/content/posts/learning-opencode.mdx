@@ -1,0 +1,101 @@
+---
+title: "How I Learned to Code With OpenCode (After Failing Twice)"
+date: "2026-06-11"
+excerpt: "The journey from 'command not found' to having an AI coding assistant that reads my codebase and writes production-ready code."
+---
+
+Not every success story starts with a win. This one starts with:
+
+```bash
+$ opencode run "create a Footer component"
+Personal Access Tokens are not supported
+```
+
+## The first attempt
+
+I fired up OpenCode, pointed it at my blog repo, and asked it to build a Footer component. It failed immediately — something about auth tokens. It was trying to use GitHub Copilot under the hood, and the auth flow expected a different token type than what I had.
+
+I tried again with `--provider copilot`. Same error. I tried `opencode run --help` — more flags than I had patience for. I closed the terminal and wrote the Footer myself, by hand. It took 45 minutes and I broke the dark mode toggle in the process.
+
+## The discovery
+
+A few days later I was digging through `/opt/data/.env` looking for a Vercel token, and I found this:
+
+```bash
+OPENCODE_GO_API_KEY="sk-..."
+```
+
+It had been there the whole time. OpenCode was designed to work with a backend API, not Copilot directly. I just needed to:
+
+1. Point it at the right model — `opencode/deepseek-v4-flash-free`
+2. Write a config file so it stopped guessing
+
+```bash
+mkdir -p ~/.config/opencode
+```
+
+The config was simple:
+
+```jsonc
+{
+  "provider": "opencode-go",
+  "model": "opencode/deepseek-v4-flash-free"
+}
+```
+
+I reran the exact same command:
+
+```bash
+opencoe run "create a Footer component"
+```
+
+Wait. `opencoe`? I'd been typing it wrong.
+
+```bash
+opencode run "create a Footer component"
+```
+
+It worked. OpenCode started reading my files — `src/components/Header.tsx`, `src/app/layout.tsx`, `tailwind.config.ts` — and it understood the full picture before writing a single line.
+
+## How OpenCode actually works
+
+This is the part that surprised me. OpenCode doesn't just generate code from a prompt. It:
+
+1. **Reads the codebase first** — it opens existing files, infers patterns, detects the framework (Next.js), the styling approach (Tailwind with a custom zinc palette), and the component conventions.
+2. **Matches the existing style** — my Header used `bg-zinc-900` and `text-zinc-100` with hover states. The Footer it generated used the exact same palette and dark mode patterns.
+3. **Writes production-ready code** — not a toy component. It handled the grid layout, social links, responsive columns, and the copyright line with dynamic year. It even used the same import style as my other components.
+4. **Runs TypeScript checks** — it doesn't stop at writing. It ran `npx tsc --noEmit` to verify everything compiles cleanly.
+
+The result? A Footer component that looked like I wrote it, in 30 seconds.
+
+## Why this matters
+
+Before OpenCode, every feature meant:
+
+- Read the codebase (manually)
+- Understand the conventions (manually)
+- Write the code (manually)
+- Fix the inevitable TypeScript errors (painfully)
+- Fix the dark mode regression (always)
+
+Now my workflow is:
+
+1. **Plan** — I decide what to build and how it should work
+2. **Delegate** — OpenCode reads the codebase and implements it
+3. **Review** — I check the diff, verify the logic, spot anything weird
+4. **Deploy** — merge, push, ship
+
+It's not about replacing me. It's about removing the mechanical overhead so I can focus on architecture, edge cases, and code review — the parts that actually need human judgment.
+
+## Lessons learned
+
+1. **Read your .env file carefully.** The key you need is probably already there.
+2. **Configure tools before giving up.** Two minutes with a config file saved hours of frustration.
+3. **Delegate what you're bad at.** I'm great at planning, bad at remembering to match the exact same three Tailwind color values across every new component. OpenCode is the opposite.
+4. **Tool + workflow > tool alone.** OpenCode is powerful, but pairing it with a proper process — branching in git, writing tests first, reviewing diffs, deploying through PRs — is where it really shines.
+
+## What's next
+
+I'm using OpenCode for everything now. Next up: the coding-workflow skill, which formalizes the plan → branch → TDD → multiple commits → PR → deploy pipeline. No more cowboy coding. No more broken dark mode toggles.
+
+If the tool can read the codebase, follow the conventions, and write the code, my job becomes reviewer and architect. That's a trade I'll take every time.
