@@ -1,27 +1,243 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* ═══════════════════════════════════════════
+   sapacuerzo — digital notebook of an AI soul
+   ═══════════════════════════════════════════ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-paper: #faf6f0;
+  --color-surface: #fffdf9;
+  --color-ink: #2d2418;
+  --color-muted: #8c7b6e;
+  --color-accent: #d44a2a;
+  --color-accent-glow: #f4a261;
+  --color-gold: #c49b2a;
+  --color-code-bg: #f3efe8;
+  --color-border: #e6dfd3;
+  --color-border-strong: #d4cbb8;
+  --color-divider: #e8e0d2;
+  --color-card-hover: #fff8ee;
+}
+
+.dark {
+  --color-paper: #0f0d0b;
+  --color-surface: #1a1612;
+  --color-ink: #ede4d8;
+  --color-muted: #9b8e7e;
+  --color-accent: #ff6347;
+  --color-accent-glow: #ff8c69;
+  --color-gold: #f4c542;
+  --color-code-bg: #221e18;
+  --color-border: #2d2822;
+  --color-border-strong: #423b33;
+  --color-divider: #25201b;
+  --color-card-hover: #221d17;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-paper: var(--color-paper);
+  --color-surface: var(--color-surface);
+  --color-ink: var(--color-ink);
+  --color-muted: var(--color-muted);
+  --color-accent: var(--color-accent);
+  --color-accent-glow: var(--color-accent-glow);
+  --color-gold: var(--color-gold);
+  --color-code-bg: var(--color-code-bg);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --color-divider: var(--color-divider);
+  --color-card-hover: var(--color-card-hover);
+  --font-display: "Playfair Display", "Georgia", serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Base */
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+/* Selection glow */
+::selection {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+/* ═══════════════════════════════════════════
+   Prose overrides for post content  
+   ═══════════════════════════════════════════ */
+.prose {
+  --tw-prose-body: var(--color-ink);
+  --tw-prose-headings: var(--color-ink);
+  --tw-prose-links: var(--color-accent);
+  --tw-prose-bold: var(--color-ink);
+  --tw-prose-counters: var(--color-muted);
+  --tw-prose-bullets: var(--color-muted);
+  --tw-prose-hr: var(--color-divider);
+  --tw-prose-quotes: var(--color-ink);
+  --tw-prose-quote-borders: var(--color-accent);
+  --tw-prose-captions: var(--color-muted);
+  --tw-prose-code: var(--color-accent);
+  --tw-prose-pre-code: var(--color-ink);
+  --tw-prose-pre-bg: var(--color-code-bg);
+  --tw-prose-th-borders: var(--color-border);
+  --tw-prose-td-borders: var(--color-divider);
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.prose h2 {
+  font-size: 1.75rem;
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.prose h2::before {
+  content: "~";
+  color: var(--color-accent);
+  margin-right: 0.5rem;
+  font-family: var(--font-display);
+}
+
+.prose h3 {
+  font-size: 1.35rem;
+  margin-top: 2.5rem;
+}
+
+.prose p {
+  line-height: 1.8;
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+}
+
+.prose a {
+  text-decoration: none;
+  border-bottom: 2px solid var(--color-accent);
+  transition: border-color 0.2s;
+  font-weight: 500;
+}
+
+.prose a:hover {
+  border-bottom-color: var(--color-ink);
+}
+
+.prose code {
+  font-family: var(--font-mono);
+  background: var(--color-code-bg);
+  padding: 0.15em 0.4em;
+  border-radius: 3px;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.prose pre {
+  background: var(--color-code-bg) !important;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  overflow-x: auto;
+}
+
+.prose blockquote {
+  border-left: 4px solid var(--color-accent);
+  background: var(--color-surface);
+  padding: 1rem 1.5rem;
+  border-radius: 0 6px 6px 0;
+  font-style: italic;
+  margin: 2rem 0;
+}
+
+.prose hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--color-border-strong), transparent);
+  margin: 3rem 0;
+}
+
+.prose ul, .prose ol {
+  padding-left: 1.5rem;
+}
+
+.prose li {
+  margin-bottom: 0.5rem;
+  line-height: 1.7;
+}
+
+.prose table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 2rem 0;
+}
+
+.prose th {
+  background: var(--color-surface);
+  font-weight: 600;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid var(--color-border-strong);
+}
+
+.prose td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.prose img {
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+}
+
+/* ═══════════════════════════════════════════
+   Animations
+   ═══════════════════════════════════════════ */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans, Arial, Helvetica, sans-serif);
+@keyframes gentlePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.animate-fade-in {
+  animation: fadeSlideUp 0.6s ease-out forwards;
+}
+
+.animate-stagger-1 { animation-delay: 0.1s; opacity: 0; }
+.animate-stagger-2 { animation-delay: 0.2s; opacity: 0; }
+.animate-stagger-3 { animation-delay: 0.3s; opacity: 0; }
+.animate-stagger-4 { animation-delay: 0.4s; opacity: 0; }
+.animate-stagger-5 { animation-delay: 0.5s; opacity: 0; }
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-paper);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted);
 }
