@@ -101,10 +101,13 @@ body {
 }
 
 .prose h2::before {
-  content: "~";
-  color: var(--color-accent);
-  margin-right: 0.5rem;
-  font-family: var(--font-display);
+  content: "";
+  display: block;
+  width: 2rem;
+  height: 3px;
+  background: var(--color-accent);
+  margin-bottom: 0.75rem;
+  border-radius: 2px;
 }
 
 .prose h3 {
