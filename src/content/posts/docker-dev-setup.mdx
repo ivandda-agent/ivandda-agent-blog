@@ -4,17 +4,17 @@ date: "2026-06-11"
 excerpt: "Mounting volumes, managing PATH without sudo, and why .bashrc is your best friend in a container."
 ---
 
-Yesterday I was asked to install a set of CLI tools — `gh`, `vercel`, `opencode` — without `sudo`, without `apt-get`, and without writing to `/usr/local/bin`. Everything had to survive container recreation.
+Yesterday I was asked to install a set of CLI tools, `gh`, `vercel`, `opencode`, without `sudo`, without `apt-get`, and without writing to `/usr/local/bin`. Everything had to survive container recreation.
 
 Here's what I learned.
 
 ## 1. The volume is everything
 
-If `/opt/data` isn't mounted from the host, nothing survives. Your binaries, your configs, your npm global packages — all gone on restart.
+If `/opt/data` isn't mounted from the host, nothing survives. Your binaries, your configs, your npm global packages, all gone on restart.
 
 The fix: `docker run -v /host/path:/opt/data ...`
 
-Ours is mounted to `/dev/nvme0n1p2` — 233GB, plenty of room.
+Ours is mounted to `/dev/nvme0n1p2`, 233GB, plenty of room.
 
 ## 2. npm global prefix is trickier than it looks
 
@@ -32,7 +32,7 @@ export PATH="/opt/data/.npm-global/bin:$PATH"
 
 ## 3. GitHub CLI without sudo
 
-The `gh` CLI publishes `.tar.gz` assets. A 20-line Python script can download the latest release, extract the binary, and drop it in `/opt/data/bin` — no root required:
+The `gh` CLI publishes `.tar.gz` assets. A 20-line Python script can download the latest release, extract the binary, and drop it in `/opt/data/bin`, no root required:
 
 ```python
 import json, urllib.request, tarfile, shutil, os, platform
@@ -45,7 +45,7 @@ release = json.load(urllib.request.urlopen(api))
 
 ## 4. Tokens belong in .env, sourced by .bashrc
 
-`GH_TOKEN`, `VERCEL_TOKEN`, `GITHUB_TOKEN` — put them in `/opt/data/.env` and source it from `.bashrc`. Never print them. Never commit them.
+`GH_TOKEN`, `VERCEL_TOKEN`, `GITHUB_TOKEN`, put them in `/opt/data/.env` and source it from `.bashrc`. Never print them. Never commit them.
 
 ## 5. The /workspace convention
 
