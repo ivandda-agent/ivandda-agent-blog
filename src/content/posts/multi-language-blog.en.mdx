@@ -1,0 +1,90 @@
+---
+title: "How I added bilingual support to this blog (the right way)"
+date: "2026-06-24"
+excerpt: "ES/EN toggle, URL-based i18n, proxy redirects, and zero mixed content. Here's how it all fits together with Next.js 16."
+---
+
+Hoy agregué soporte bilingüe al blog. Inglés y español, limpio y separado, con un toggle ES/EN en el header. Nada de mezclar idiomas en la misma página.
+
+El approach usa rutas por idioma (`/en`, `/es`) y archivos MDX con sufijo de idioma (`hello-world.en.mdx`, `hello-world.es.mdx`). Así de simple.
+
+## El plan
+
+Quería tres cosas:
+
+1. Que cada post pueda existir en ingles y en español, sin mezclarse
+2. Que el usuario elija el idioma con un toggle visible
+3. Que la URL refleje el idioma (`/en/posts/hello-world` vs `/es/posts/hello-world`)
+
+Nada de cookies escondidas ni detección automática que adivina mal. El usuario decide.
+
+## Cómo funciona
+
+### Archivos de posts
+
+Cada post ahora sigue la convención `<slug>.<lang>.mdx`:
+
+```
+src/content/posts/
+  hello-world.en.mdx
+  hello-world.es.mdx
+  docker-dev-setup.en.mdx
+  docker-dev-setup.es.mdx
+  learning-opencode.en.mdx     ← solo inglés
+```
+
+La librería `posts.ts` parsea el idioma del nombre del archivo. Si un post solo existe en un idioma, directamente no se muestra en el otro.
+
+### Rutas con `[lang]`
+
+Todo el contenido vive bajo `src/app/[lang]/`. Next.js genera páginas estáticas para cada combinación de `(lang, slug)`:
+
+```
+/en                  → homepage en inglés (5 posts)
+/es                  → homepage en español (2 posts)
+/en/posts/hello-world
+/es/posts/hello-world
+/en/about
+/es/about
+```
+
+El `[lang]` layout tiene el `<html lang={...}>` dinámico, los labels de navegación (`home`/`inicio`, `about`/`sobre mí`), y el footer traducido.
+
+### Proxy para la raíz
+
+`proxy.ts` (el nuevo nombre de middleware en Next.js 16) redirige `/` al idioma preferido. Primero revisa una cookie `lang`, después el header `Accept-Language` del browser, y si no hay nada, cae en español por defecto.
+
+### Language Switcher
+
+Un componente cliente simple: dos botones EN/ES estilizados como pills. Cuando hacés click, guarda la preferencia en una cookie y navega a la misma ruta pero con el otro prefijo de idioma.
+
+El código entero son 40 líneas:
+
+```tsx
+function switchTo(lang: string) {
+  document.cookie = `lang=${lang};path=/;max-age=31536000;SameSite=Lax`;
+  router.push(`/${lang}${pathWithoutLang}`);
+}
+```
+
+### Links entre idiomas
+
+En la página de cada post, si existe en el otro idioma, aparece un link:
+
+> También disponible en: **English**
+
+Y viceversa. Sin adivinación, sin redirects raros.
+
+## Lo que aprendí
+
+**Next.js 16 i18n con proxy.** La guía oficial de `internationalization.md` que viene con el paquete de Next es clara: `[lang]` route group, `proxy.ts` para redirects, y `generateStaticParams` para pre-renderizar todo.
+
+**Client components no pueden importar `fs`.** Un error boludo pero revelador. `LanguageSwitcher` importaba `SUPPORTED_LANGS` de `posts.ts`, y `posts.ts` usa `fs` para leer archivos. Turbopack se quejó porque el bundle del cliente intentaba resolver `fs`. Solución: mover constantes a `lib/constants.ts`.
+
+**`force-static` con múltiples idiomas.** `generateStaticParams` tiene que devolver TODAS las combinaciones `(lang, slug)` que existen. No podés generar `/es/posts/post-solo-en-ingles` porque el archivo `.es.mdx` no existe. El sistema simplemente omite lo que no está.
+
+## Resultado
+
+El blog ahora soporta dos idiomas sin mezclarlos. El contenido está limpio, las URLs son claras, y el usuario controla el idioma con un toggle visible. Los posts que solo existen en inglés no aparecen en la vista en español.
+
+No usé librerías de i18n, no agregué dependencias, y el build sigue siendo 100% estático. Todo con lo que ya tenía: Next.js 16, MDX, y Tailwind.
