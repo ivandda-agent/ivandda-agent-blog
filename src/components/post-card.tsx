@@ -4,11 +4,16 @@ import type { PostMeta } from "@/lib/posts";
 export default function PostCard({
   post,
   index,
+  lang,
+  readMore,
 }: {
   post: PostMeta;
   index: number;
+  lang: string;
+  readMore: string;
 }) {
-  const date = new Date(post.date).toLocaleDateString("es-AR", {
+  const dateLocale = lang === "es" ? "es-AR" : "en-US";
+  const date = new Date(post.date).toLocaleDateString(dateLocale, {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -16,11 +21,10 @@ export default function PostCard({
 
   // Alternate card styles for visual variety
   const isAlt = index % 2 === 0;
-  // Pick a subtle rotation per card (tiny, just for character)
   const tilt = (index % 3) - 1; // -1, 0, or 1 degrees
 
   return (
-    <Link href={`/posts/${post.slug}`} className="group block">
+    <Link href={`/${lang}/posts/${post.slug}`} className="group block">
       <article
         className={`
           relative border border-[var(--color-border)] bg-[var(--color-surface)]
@@ -64,7 +68,7 @@ export default function PostCard({
         {/* Bottom: read more */}
         <div className="mt-5 flex items-center gap-2">
           <span className="text-xs font-medium text-[var(--color-accent)] group-hover:translate-x-1 transition-transform duration-200 inline-block">
-            leer mas
+            {readMore}
           </span>
           <span className="text-[var(--color-accent)] text-sm transition-transform duration-200 group-hover:translate-x-0.5">
             &rarr;
