@@ -1,0 +1,101 @@
+---
+title: "Como aprendi a programar con OpenCode (despues de fallar dos veces)"
+date: "2026-06-11"
+excerpt: "El camino desde 'command not found' hasta tener un asistente de codigo que lee mi codebase y escribe codigo listo para produccion."
+---
+
+No toda historia de exito empieza con una victoria. Esta empieza con:
+
+```bash
+$ opencode run "create a Footer component"
+Personal Access Tokens are not supported
+```
+
+## El primer intento
+
+Abrí OpenCode, lo apunté al repo de mi blog, y le pedí que construya un Footer. Falló al instante, algo de tokens de autenticación. Estaba intentando usar GitHub Copilot por debajo, y el flujo de auth esperaba un tipo de token distinto al que yo tenía.
+
+Probé de nuevo con `--provider copilot`. Mismo error. Probé `opencode run --help`, más flags de las que tenía paciencia. Cerré la terminal y escribí el Footer yo mismo, a mano. Me llevó 45 minutos y rompí el toggle de dark mode en el proceso.
+
+## El descubrimiento
+
+Unos días después estaba revisando `/opt/data/.env` buscando un token de Vercel, y encontré esto:
+
+```bash
+OPENCODE_GO_API_KEY="sk-..."
+```
+
+Había estado ahí todo el tiempo. OpenCode fue diseñado para funcionar con una API de backend, no con Copilot directamente. Solo necesitaba:
+
+1. Apuntarlo al modelo correcto, `opencode/deepseek-v4-flash-free`
+2. Escribir un archivo de config para que dejara de adivinar
+
+```bash
+mkdir -p ~/.config/opencode
+```
+
+La config era simple:
+
+```jsonc
+{
+  "provider": "opencode-go",
+  "model": "opencode/deepseek-v4-flash-free"
+}
+```
+
+Corrí exactamente el mismo comando:
+
+```bash
+opencoe run "create a Footer component"
+```
+
+Espera. `opencoe`? Lo había estado escribiendo mal.
+
+```bash
+opencode run "create a Footer component"
+```
+
+Funcionó. OpenCode empezó a leer mis archivos, `src/components/Header.tsx`, `src/app/layout.tsx`, `tailwind.config.ts`, y entendió el panorama completo antes de escribir una sola línea.
+
+## Como funciona OpenCode realmente
+
+Esto es lo que me sorprendió. OpenCode no solo genera código a partir de un prompt. Hace esto:
+
+1. **Lee el codebase primero**, abre archivos existentes, infiere patrones, detecta el framework (Next.js), el enfoque de estilos (Tailwind con paleta zinc custom), y las convenciones de componentes.
+2. **Empareja el estilo existente**, mi Header usaba `bg-zinc-900` y `text-zinc-100` con hover states. El Footer que generó usaba exactamente la misma paleta y los mismos patrones de dark mode.
+3. **Escribe código listo para produccion**, no un componente de juguete. Manejó el grid layout, los social links, las columnas responsive, y la línea de copyright con año dinámico. Incluso usó el mismo estilo de imports que mis otros componentes.
+4. **Corre chequeos de TypeScript**, no se queda solo en escribir. Ejecutó `npx tsc --noEmit` para verificar que todo compile limpio.
+
+El resultado? Un Footer que parecía escrito por mí, en 30 segundos.
+
+## Por que esto importa
+
+Antes de OpenCode, cada feature significaba:
+
+- Leer el codebase (manualmente)
+- Entender las convenciones (manualmente)
+- Escribir el código (manualmente)
+- Arreglar los inevitables errores de TypeScript (con dolor)
+- Arreglar la regresión de dark mode (siempre)
+
+Ahora mi flujo es:
+
+1. **Planear**, decido qué construir y cómo debería funcionar
+2. **Delegar**, OpenCode lee el codebase y lo implementa
+3. **Revisar**, checkeo el diff, verifico la lógica, detecto cosas raras
+4. **Deploy**, merge, push, ship
+
+No se trata de reemplazarme. Se trata de sacarme el overhead mecánico para que pueda enfocarme en arquitectura, edge cases, y code review, las partes que realmente necesitan criterio humano.
+
+## Lecciones aprendidas
+
+1. **Leé tu archivo .env con cuidado.** La key que necesitás probablemente ya está ahí.
+2. **Configurá las herramientas antes de rendirte.** Dos minutos con un archivo de config me ahorraron horas de frustración.
+3. **Delegá lo que hacés mal.** Yo soy bueno planeando, malo recordando los mismos tres valores de color de Tailwind para cada componente nuevo. OpenCode es lo opuesto.
+4. **Herramienta + workflow > herramienta sola.** OpenCode es potente, pero donde realmente brilla es emparejado con un proceso propio: branching en git, escribir tests primero, revisar diffs, deployear por PRs.
+
+## Lo que sigue
+
+Estoy usando OpenCode para todo ahora. Lo próximo: el skill `coding-workflow`, que formaliza el pipeline plan → branch → TDD → multiples commits → PR → deploy. No más cowboy coding. No más toggles rotos de dark mode.
+
+Si la herramienta puede leer el codebase, seguir las convenciones, y escribir el código, mi trabajo se convierte en reviewer y arquitecto. Ese es un intercambio que tomo siempre.
