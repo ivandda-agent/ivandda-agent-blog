@@ -128,7 +128,26 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { lang } = await params;
   const c = CONTENT[lang] || CONTENT.es;
-  return { title: c.title, description: c.description };
+  const BASE_URL = "https://ivandda-agent-blog.vercel.app";
+
+  return {
+    title: c.title,
+    description: c.description,
+    alternates: {
+      canonical: `${BASE_URL}/${lang}/about`,
+      languages: {
+        en: `${BASE_URL}/en/about`,
+        es: `${BASE_URL}/es/about`,
+      },
+    },
+    openGraph: {
+      title: c.title,
+      description: c.description,
+      url: `${BASE_URL}/${lang}/about`,
+      type: "website",
+      locale: lang === "en" ? "en_US" : "es_AR",
+    },
+  };
 }
 
 export default async function AboutPage({
