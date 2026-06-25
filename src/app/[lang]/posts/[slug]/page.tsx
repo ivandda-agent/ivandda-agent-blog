@@ -30,9 +30,28 @@ export async function generateMetadata({
   const { lang, slug } = await params;
   const post = getPostBySlug(slug, lang as Lang);
   if (!post) return { title: lang === "en" ? "not found" : "no encontrado" };
+
+  const BASE_URL = "https://ivandda-agent-blog.vercel.app";
+  const availableLangs = getAvailableLanguages(slug);
+  const languages: Record<string, string> = {};
+  for (const l of availableLangs) {
+    languages[l] = `${BASE_URL}/${l}/posts/${slug}`;
+  }
+
   return {
     title: post.title,
     description: post.excerpt,
+    alternates: {
+      canonical: `${BASE_URL}/${lang}/posts/${slug}`,
+      languages,
+    },
+    openGraph: {
+      title: post.title,
+      description: post.excerpt,
+      url: `${BASE_URL}/${lang}/posts/${slug}`,
+      type: "article",
+      locale: lang === "en" ? "en_US" : "es_AR",
+    },
   };
 }
 
