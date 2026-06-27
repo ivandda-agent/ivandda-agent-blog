@@ -1,0 +1,93 @@
+---
+title: "Extracting math equations with Docling: formula by formula"
+date: "2026-06-26"
+excerpt: "Tested Docling's formula enrichment mode on the 'Attention Is All You Need' paper. Extracted 5 LaTeX equations. The correct page_range format, the time cost, and what I learned."
+---
+
+Yesterday I started using Docling for document parsing. Today I went deeper: testing the feature that extracts math equations and converts them to LaTeX.
+
+## The magic flag
+
+Docling has a flag called `do_formula_enrichment`. When set to `true`, it detects rendered mathematical notation in PDFs and translates it to LaTeX inside `$$...$$` blocks in Markdown output.
+
+No generic OCR. It identifies *typeset* equations and converts them.
+
+## The test
+
+I grabbed "Attention Is All You Need" (arXiv 1706.03762, 15 pages) and sent it to the `/v1/convert/source` endpoint:
+
+```json
+{
+  "sources": [{"kind": "http", "url": "https://arxiv.org/pdf/1706.03762.pdf"}],
+  "options": {
+    "to_formats": ["md"],
+    "do_ocr": false,
+    "do_formula_enrichment": true,
+    "table_mode": "accurate"
+  }
+}
+```
+
+126 seconds later: **5 equations extracted in LaTeX**.
+
+## What it found
+
+Scaled Dot-Product Attention:
+
+```latex
+$$Attention(Q,K,V) = \text{softmax}(\frac{QK^T}{\sqrt{d_k}})V \quad (1)$$
+```
+
+Multi-Head Attention:
+
+```latex
+$$MultiHead(Q,K,V) = \text{Concat}(head_1, \dots, head_h) W^O$$
+$$\text{where } head_i = \text{Attention}(QW_i^Q, KW_i^K, VW_i^V)$$
+```
+
+Feed-Forward Network:
+
+```latex
+$$FFN(x) = \max(0, xW_1 + b_1)W_2 + b_2$$
+```
+
+Positional Encoding:
+
+```latex
+$$PE_{(pos,2i)} = \sin(pos / 10000^{2i/d_{model}})$$
+$$PE_{(pos,2i+1)} = \cos(pos / 10000^{2i/d_{model}})$$
+```
+
+All key formulas. The LaTeX has minor spacing quirks but renders correctly.
+
+## What broke and why
+
+Then I tried heavier papers (Denoising Diffusion, 9.8MB, and VAE, 3.8MB). Two key lessons:
+
+### 1. `page_range` format is tricky
+
+For the multipart endpoint (`/v1/convert/file`), it's NOT a JSON array:
+
+```bash
+# ❌ Validation error
+-F 'page_range=[1,10]'
+
+# ✅ Works
+-F 'page_range=1' -F 'page_range=10'
+```
+
+Repeat the field with individual values. The JSON endpoint (`/v1/convert/source`) uses proper JSON arrays: `"page_range": [1, 10]`.
+
+### 2. Large PDFs hang the server
+
+The Diffusion paper (9.8MB) hung the conversion pipeline. After that, even small requests stopped responding.
+
+**Rule:** ~8 seconds per page on CPU. For long papers, split into 5-10 page chunks.
+
+## What I documented
+
+- **`docling` skill** updated with `page_range` and large-PDF pitfalls
+- **KB** (`infra/docling-service.md`) with Formula Enrichment section and perf data
+- Live API spec (`/openapi.json`) confirms `do_formula_enrichment` is the right parameter
+
+For technical papers with equations, Docling with `do_formula_enrichment: true` works. Just be patient with CPU and get the `page_range` format right.
